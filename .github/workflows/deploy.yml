@@ -42,7 +42,6 @@ jobs:
     - name: Authenticate to Google Cloud
       run: |
         echo "${{ secrets.GOOGLE_CLOUD_SA }}" > /tmp/gcloud-key.json
-        cat /tmp/gcloud-key.json
         gcloud auth activate-service-account --key-file /tmp/gcloud-key.json
         gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
 
@@ -53,5 +52,6 @@ jobs:
           --image docker.io/${{ secrets.DOCKER_USERNAME }}/reminder-backend:latest \
           --platform managed \
           --region us-central1 \
-          --project ${{ secrets.GCP_PROJECT_ID }}
+          --project ${{ secrets.GCP_PROJECT_ID }} \
+          --set-secrets="/app/.secrets/firebasekey.json=FIREBASE_KEY" \
           --allow-unauthenticated

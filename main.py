@@ -3,7 +3,7 @@ from firebase_admin import credentials, initialize_app, auth
 from fastapi.responses import JSONResponse
 
 # Initialize Firebase Admin SDK
-cred = credentials.Certificate(".secrets/firebasekey.json")
+cred = credentials.Certificate("/app/.secrets/firebasekey.json")
 initialize_app(cred)
 
 app = FastAPI()
