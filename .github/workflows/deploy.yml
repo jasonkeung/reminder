@@ -1,0 +1,48 @@
+name: Build and Deploy to Cloud Run
+
+on:
+  push:
+    branches:
+      - main  # Trigger the workflow when code is pushed to the `main` branch
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Checkout code from GitHub
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    # Step 2: Set up Google Cloud SDK
+    - name: Set up Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v0
+      with:
+        project_id: ${{ secrets.GCP_PROJECT_ID }}  # Replace with your GCP project ID
+        credentials: ${{ secrets.GOOGLE_CLOUD_SA }}    # Set the secret GCP service account key
+
+    # Step 3: Authenticate Docker with Google Cloud Container Registry
+    - name: Configure Docker to use Google Cloud credentials
+      run: gcloud auth configure-docker us-docker.pkg.dev --quiet
+
+    # Step 4: Build Docker image
+    - name: Build Docker image
+      run: |
+        docker build -t us-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/reminder-backend/backend:latest .
+
+    # Step 5: Push Docker image to Artifact Registry
+    - name: Push Docker image to Artifact Registry
+      run: |
+        docker push us-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/reminder-backend/backend:latest
+
+    # Step 6: Deploy to Cloud Run
+    - name: Deploy to Cloud Run
+      run: |
+        gcloud run deploy reminder-backend \
+          --image us-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/reminder-backend/backend:latest \
+          --platform managed \
+          --region us-central1 \
+          --allow-unauthenticated
