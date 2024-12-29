@@ -31,12 +31,15 @@ jobs:
     # Step 4: Build Docker image
     - name: Build Docker image
       run: |
-        docker build -t docker.io/${{ secrets.DOCKER_USERNAME }}/reminder-backend:latest .
+        COMMIT_HASH=${GITHUB_SHA:0:7}
+        IMAGE_TAG="docker.io/${{ secrets.DOCKER_USERNAME }}/reminder-backend:${COMMIT_HASH}"
+        docker build -t $IMAGE_TAG .
+        echo "Built image with tag: $IMAGE_TAG"
 
     # Step 5: Push Docker image to Docker Hub
     - name: Push Docker image to Docker Hub
       run: |
-        docker push docker.io/${{ secrets.DOCKER_USERNAME }}/reminder-backend:latest
+        docker push $IMAGE_TAG
 
     # Step 6: Authenticate with Google Cloud using Service Account Key
     - name: Authenticate to Google Cloud
@@ -49,7 +52,7 @@ jobs:
     - name: Deploy to Cloud Run
       run: |
         gcloud run deploy reminder-backend \
-          --image docker.io/${{ secrets.DOCKER_USERNAME }}/reminder-backend:latest \
+          --image $IMAGE_TAG \
           --platform managed \
           --region us-central1 \
           --project ${{ secrets.GCP_PROJECT_ID }} \
