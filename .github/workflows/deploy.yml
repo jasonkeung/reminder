@@ -32,13 +32,14 @@ jobs:
     - name: Build Docker image
       run: |
         COMMIT_HASH=${GITHUB_SHA:0:7}
-        IMAGE_TAG="docker.io/${{ secrets.DOCKER_USERNAME }}/reminder-backend:${COMMIT_HASH}"
+        echo "IMAGE_TAG=docker.io/${{ secrets.DOCKER_USERNAME }}/reminder-backend:${COMMIT_HASH}" >> $GITHUB_ENV
         docker build -t $IMAGE_TAG .
         echo "Built image with tag: $IMAGE_TAG"
 
     # Step 5: Push Docker image to Docker Hub
     - name: Push Docker image to Docker Hub
       run: |
+        echo "Pushing image: $IMAGE_TAG"
         docker push $IMAGE_TAG
 
     # Step 6: Authenticate with Google Cloud using Service Account Key
