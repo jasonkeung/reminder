@@ -24,4 +24,4 @@ def secure_data(user=Depends(verify_firebase_token)):
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to jason's backend server!"}
+    return {"message": "Welcome to jason's backend server 2!"}
