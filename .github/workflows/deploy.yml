@@ -31,11 +31,8 @@ jobs:
     - name: Set image tag
       id: image_tag
       run: |
-        echo "COMMIT_HASH=${GITHUB_SHA:0:7}" >> $GITHUB_ENV
-        echo "COMMIT_IMAGE_TAG=docker.io/${{ secrets.DOCKER_USERNAME }}/reminder-backend:${COMMIT_HASH}" >> $GITHUB_ENV
+        echo "COMMIT_IMAGE_TAG=docker.io/${{ secrets.DOCKER_USERNAME }}/reminder-backend:${GITHUB_SHA:0:7}" >> $GITHUB_ENV
         echo "LATEST_IMAGE_TAG=docker.io/${{ secrets.DOCKER_USERNAME }}/reminder-backend:latest" >> $GITHUB_ENV
-        echo "Using image tag: $COMMIT_IMAGE_TAG"
-        echo "Using image tag: $LATEST_IMAGE_TAG"
 
     # Step 4: Build Docker image
     - name: Build Docker image
