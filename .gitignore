@@ -1,24 +1,16 @@
 .secrets/
-# Python bytecode files
 *.pyc
 *.pyo
 __pycache__/
 
-# Virtual environments
-venv/
+backend/venv/
 .env/
 
-# Distribution / packaging
 .Python
 build/
 dist/
 *.egg-info/
 
-# Jupyter Notebook checkpoints
-.ipynb_checkpoints/
-
-# VS Code settings
 .vscode/
 
-# MacOS
 .DS_Store
