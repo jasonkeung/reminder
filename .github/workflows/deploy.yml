@@ -27,7 +27,7 @@ jobs:
         id: image_tag
         run: |
           echo "COMMIT_IMAGE_TAG=docker.io/${{ secrets.DOCKER_USERNAME }}/reminder-frontend:${GITHUB_SHA:0:7}" >> $GITHUB_ENV
-          echo "LATEST_IMAGE_TAG=docker.io/${{ secrets.DOCKER_USERNAME }}/reminder-frontend:latest" >> $GITHUB_ENV'
+          echo "LATEST_IMAGE_TAG=docker.io/${{ secrets.DOCKER_USERNAME }}/reminder-frontend:latest" >> $GITHUB_ENV
 
       - name: Build Docker image
         run: |
