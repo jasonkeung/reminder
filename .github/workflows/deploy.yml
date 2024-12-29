@@ -53,5 +53,5 @@ jobs:
           --platform managed \
           --region us-central1 \
           --project ${{ secrets.GCP_PROJECT_ID }} \
-          --set-secrets="/app/.secrets/firebasekey.json=FIREBASE_KEY" \
+          --set-secrets="/app/.secrets/firebasekey.json=FIREBASE_KEY:latest" \
           --allow-unauthenticated
