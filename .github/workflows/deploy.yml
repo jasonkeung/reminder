@@ -1,4 +1,4 @@
-name: Build and Deploy to Cloud Run
+name: Build and Deploy to Docker Hub
 
 on:
   push:
@@ -17,32 +17,32 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    # Step 2: Set up Google Cloud SDK
-    - name: Set up Google Cloud SDK
-      uses: google-github-actions/setup-gcloud@v0
-      with:
-        project_id: ${{ secrets.GCP_PROJECT_ID }}  # Replace with your GCP project ID
-        credentials: ${{ secrets.GOOGLE_CLOUD_SA }}    # Set the secret GCP service account key
+    # Step 2: Set up Docker Buildx
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
 
-    # Step 3: Authenticate Docker with Google Cloud Container Registry
-    - name: Configure Docker to use Google Cloud credentials
-      run: gcloud auth configure-docker us-docker.pkg.dev --quiet
+    # Step 3: Log in to Docker Hub using Personal Access Token
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}  # Your Docker Hub username
+        password: ${{ secrets.DOCKER_PASSWORD }}  # The personal access token
 
     # Step 4: Build Docker image
     - name: Build Docker image
       run: |
-        docker build -t us-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/reminder-backend/backend:latest .
+        docker build -t docker.io/${{ secrets.DOCKER_USERNAME }}/reminder-backend:latest .
 
-    # Step 5: Push Docker image to Artifact Registry
-    - name: Push Docker image to Artifact Registry
+    # Step 5: Push Docker image to Docker Hub
+    - name: Push Docker image to Docker Hub
       run: |
-        docker push us-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/reminder-backend/backend:latest
+        docker push docker.io/${{ secrets.DOCKER_USERNAME }}/reminder-backend:latest
 
-    # Step 6: Deploy to Cloud Run
+    # Optional Step 6: Deploy to Cloud Run (if needed)
     - name: Deploy to Cloud Run
       run: |
         gcloud run deploy reminder-backend \
-          --image us-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/reminder-backend/backend:latest \
+          --image docker.io/${{ secrets.DOCKER_USERNAME }}/reminder-backend:latest \
           --platform managed \
           --region us-central1 \
           --allow-unauthenticated
