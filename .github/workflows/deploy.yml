@@ -28,11 +28,17 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}  # Your Docker Hub username
         password: ${{ secrets.DOCKER_PASSWORD }}  # The personal access token
 
-    # Step 4: Build Docker image
-    - name: Build Docker image
+    - name: Set image tag
+      id: image_tag
       run: |
         COMMIT_HASH=${GITHUB_SHA:0:7}
         echo "IMAGE_TAG=docker.io/${{ secrets.DOCKER_USERNAME }}/reminder-backend:${COMMIT_HASH}" >> $GITHUB_ENV
+        echo "Using image tag: $IMAGE_TAG"
+
+    # Step 4: Build Docker image
+    - name: Build Docker image
+      run: |
+        echo "Building image with tag: $IMAGE_TAG"
         docker build -t $IMAGE_TAG .
         echo "Built image with tag: $IMAGE_TAG"
 
