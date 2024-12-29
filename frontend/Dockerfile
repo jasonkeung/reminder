@@ -1,10 +1,11 @@
-FROM node:16 AS build
+FROM node:18-alpine AS build
 WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
 COPY . .
-RUN npm install && npm run build
+RUN npm run build
 
-FROM nginx:alpine
+FROM nginx:stable-alpine AS production
 COPY --from=build /app/build /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/nginx.conf
-EXPOSE 8080
+EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
