@@ -24,4 +24,4 @@ def secure_data(user=Depends(verify_firebase_token)):
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to the FastAPI Firebase Auth service!"}
+    return {"message": "Welcome to jason's backend server!"}
