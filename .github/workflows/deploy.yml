@@ -54,8 +54,9 @@ jobs:
             --image $COMMIT_IMAGE_TAG \
             --platform managed \
             --region us-central1 \
+            --port 8080 \
+            --set-env-vars=PORT=8080
             --project ${{ secrets.GCP_PROJECT_ID }} \
-            --set-secrets="/app/.secrets/firebasekey.json=FIREBASE_KEY:latest" \
             --allow-unauthenticated
   
   
