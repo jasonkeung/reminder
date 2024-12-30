@@ -1,12 +1,24 @@
 from fastapi import FastAPI, Depends, HTTPException, Header
 from firebase_admin import credentials, initialize_app, auth
-from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 # Initialize Firebase Admin SDK
 cred = credentials.Certificate("/app/.secrets/firebasekey.json")
 initialize_app(cred)
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+     allow_origins=[
+        "https://reminder-frontend-349073578254.us-central1.run.app/", 
+        "http://localhost:8080",
+        "http://localhost:3000"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def verify_firebase_token(authorization: str = Header(None)):
     if not authorization or not authorization.startswith("Bearer "):
@@ -24,7 +36,7 @@ def secure_data(user=Depends(verify_firebase_token)):
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to jason's backend server 4!"}
+    return {"message": "Welcome to jason's backend server 1!"}
 
 @app.get("/test")
 def read_root():
