@@ -1,8 +1,8 @@
 const API_URL = process.env.API_URL || 'http://localhost:8000';
 
 class ApiClient {
-    async get(endpoint) {
-        const response = await fetch(`${API_URL}${endpoint}`);
+    async get(endpoint, options = {}) {
+        const response = await fetch(`${API_URL}${endpoint}`, options);
         if (!response.ok) {
             throw new Error(`API call failed: ${response.statusText}`);
         }
