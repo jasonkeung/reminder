@@ -22,3 +22,5 @@ docker-compose up --build
 frontend url: http://0.0.0.0:8080/
 backend url: http://0.0.0.0:8000/
 
+Upon push, docker containers are automatically built and deployed to GCP Cloud Run.
+
