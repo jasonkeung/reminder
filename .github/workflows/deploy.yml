@@ -57,7 +57,7 @@ jobs:
             --port 8080 \
             --project ${{ secrets.GCP_PROJECT_ID }} \
             --allow-unauthenticated \
-            --set-env-vars=API_URL=https://reminder-backend-349073578254.us-central1.run.app/
+            --set-env-vars=API_URL=https://reminder-backend-349073578254.us-central1.run.app
   
   
   
