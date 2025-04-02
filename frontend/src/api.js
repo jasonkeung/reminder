@@ -2,6 +2,7 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
 class ApiClient {
     async get(endpoint, options = {}) {
+        console.log(`process:  ${JSON.stringify(process.env)}`);
         const response = await fetch(`${API_URL}${endpoint}`, options);
         if (!response.ok) {
             throw new Error(`API call failed: ${response.statusText}`);
