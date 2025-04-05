@@ -1,25 +1,55 @@
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+let apiUrl = null;
+
+async function getApiUrl() {
+    if (apiUrl) return apiUrl;
+    try {
+        const res = await fetch('/config.json');
+        if (!res.ok) {
+            throw new Error('Failed to load config.json');
+        }
+        const config = await res.json();
+        apiUrl = config.API_URL;
+        if (!apiUrl) {
+            throw new Error('API_URL missing in config.json');
+        }
+        return apiUrl;
+    } catch (error) {
+        console.error("Could not initialize API client:", error);
+        throw error;
+    }
+}
 
 class ApiClient {
-    async get(endpoint, options = {}) {
-        console.log(`process:  ${JSON.stringify(process.env)}`);
-        const response = await fetch(`${API_URL}${endpoint}`, options);
-        if (!response.ok) {
-            throw new Error(`API call failed: ${response.statusText}`);
-        }
-        return response.json();
+    constructor() {
+        this.apiUrl = getApiUrl();
     }
 
-    async post(endpoint, data) {
-        const response = await fetch(`${API_URL}${endpoint}`, {
-            method: 'POST',
+    get(endpoint, options = {}) {
+        return this.request('GET', endpoint, null, options);
+    }
+
+    post(endpoint, data, options = {}) {
+        return this.request('POST', endpoint, data, options);
+    }
+
+    async request(method, endpoint, data = null, options = {}) {
+        const url = `${await this.apiUrl}${endpoint}`;
+        const config = {
+            method,
             headers: {
                 'Content-Type': 'application/json',
+                ...(options.headers || {}),
             },
-            body: JSON.stringify(data),
-        });
+            ...options,
+        };
+
+        if (data) {
+            config.body = JSON.stringify(data);
+        }
+
+        const response = await fetch(url, config);
         if (!response.ok) {
-            throw new Error(`API call failed: ${response.statusText}`);
+            throw new Error(`API ${method} ${endpoint} failed: ${response.statusText}`);
         }
         return response.json();
     }
