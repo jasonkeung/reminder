@@ -29,6 +29,10 @@ jobs:
           echo "COMMIT_IMAGE_TAG=docker.io/${{ secrets.DOCKER_USERNAME }}/reminder-frontend:${GITHUB_SHA:0:7}" >> $GITHUB_ENV
           echo "LATEST_IMAGE_TAG=docker.io/${{ secrets.DOCKER_USERNAME }}/reminder-frontend:latest" >> $GITHUB_ENV
 
+      - name: Set production API URL in public/config.json
+        run: |
+          echo '{ "API_URL": "https://reminder-backend-349073578254.us-central1.run.app" }' > frontend/public/config.json
+
       - name: Build Docker image
         run: |
           echo "Building image with tags: $COMMIT_IMAGE_TAG $LATEST_IMAGE_TAG"
@@ -47,10 +51,6 @@ jobs:
           echo "${{ secrets.GOOGLE_CLOUD_SA }}" > /tmp/gcloud-key.json
           gcloud auth activate-service-account --key-file /tmp/gcloud-key.json
           gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
-    
-      - name: Set production API URL in public/config.json
-        run: |
-          echo '{ "API_URL": "https://reminder-backend-349073578254.us-central1.run.app" }' > frontend/public/config.json
 
       - name: Deploy to Cloud Run
         run: |
@@ -60,8 +60,7 @@ jobs:
             --region us-central1 \
             --port 8080 \
             --project ${{ secrets.GCP_PROJECT_ID }} \
-            --allow-unauthenticated \
-            --set-env-vars "REACT_APP_API_URL=https://reminder-backend-349073578254.us-central1.run.app"
+            --allow-unauthenticated
   
   
   
