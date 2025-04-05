@@ -11,7 +11,7 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
      allow_origins=[
-        "https://reminder-frontend-349073578254.us-central1.run.app/",
+        "https://reminder-frontend-349073578254.us-central1.run.app",
         "http://0.0.0.0:8080",
         "http://localhost:8080",
         "http://localhost:3000"
