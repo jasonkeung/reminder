@@ -21,6 +21,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.options("/test")
+async def preflight():
+    return {"message": "Preflight request accepted"}
+
 def verify_firebase_token(authorization: str = Header(None)):
     print("Authorization Header:", authorization)
     if not authorization or not authorization.startswith("Bearer "):
