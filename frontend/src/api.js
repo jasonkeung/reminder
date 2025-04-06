@@ -24,11 +24,52 @@ class ApiClient {
         this.apiUrl = getApiUrl();
     }
 
-    get(endpoint, options = {}) {
+    getLoginCount(idToken, callback) {
+        const callApi = async () => {
+            try {
+                const response = await api.get('/login-count', idToken);
+                callback(response.count);
+            } catch (error) {
+                console.error('Error fetching login count:', error);
+            }
+        }
+        callApi();
+    }
+
+    postLogin(idToken) {
+        const callApi = async () => {
+            try {
+                const response = await this.post('/login', null, idToken);
+            } catch (error) {
+                console.error('Error fetching login count:', error);
+            }
+        }
+        callApi();
+    }
+
+    ping(callback) {
+        const fetchTestData = async () => {
+            await api.get('/test');
+            callback();
+        };
+        fetchTestData();
+    }
+
+    get(endpoint, idToken = null) {
+        let options = {
+            headers: {
+                Authorization: `Bearer ${idToken}`
+            }
+        }
         return this.request('GET', endpoint, null, options);
     }
 
-    post(endpoint, data, options = {}) {
+    post(endpoint, data, idToken = null) {
+        let options = {
+            headers: {
+                Authorization: `Bearer ${idToken}`
+            }
+        }
         return this.request('POST', endpoint, data, options);
     }
 

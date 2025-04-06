@@ -1,4 +1,5 @@
 import { auth } from './firebase';
+import { api } from './api';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
 const provider = new GoogleAuthProvider();
@@ -6,8 +7,10 @@ const provider = new GoogleAuthProvider();
 const loginWithGoogle = async (onLoginSuccess) => {
   try {
     const result = await signInWithPopup(auth, provider);
-    console.log("User logged in:", result.user);
+    // console.log("User logged in:", result.user);
     const idToken = await result.user.getIdToken();
+    api.post('/login', null, idToken);
+
     onLoginSuccess(idToken);
   } catch (error) {
     console.error("Login failed:", error);

@@ -7,58 +7,40 @@ import React, { useState, useEffect } from 'react';
 
 function App() {
 
-  const [data, setData] = useState(null);
+  const [ping, setPing] = useState(false);
   const [idToken, setIdToken] = useState(null);
+  const [loginCount, setLoginCount] = useState(0);
 
   useEffect(() => {
-    const fetchTestData = async () => {
-      try {
-        const result = await api.get('/test');
-        setData(result);
-      } catch (error) {
-        console.error('Failed to fetch data:', error);
-      }
-    };
-    
-    fetchTestData();
-  }, []);
-
-  const handleLoginSuccess = (token) => {
-    setIdToken(token);
-    console.log("Token received:", token);
-  }
-
-  const fetchSecureData = async () => {
-    if (!idToken) {
-      console.error('No ID token available. Please log in first.');
-      return;
+    api.ping(() => setPing(true));
+    if (idToken != null) {
+      api.getLoginCount(idToken, setLoginCount);
     }
-    try {
-      const result = await api.get('/secure-data', {
-        headers: {
-            Authorization: `Bearer ${idToken}`
-        }
-      });
-      setData(result);
-    } catch (error) {
-        console.error('Failed to fetch secure data:', error);
-    }
-  }
-
+  }, [idToken]);
 
   return (
     <div className="App">
       <header className="App-header">
-        
-        <p>
-        data: {JSON.stringify(data)}
-        </p>
-
-        <button onClick={() => fetchSecureData()}>Make firebase secure call</button>
-
+        <div style={{ position: 'absolute', top: '10px', left: '10px', display: 'flex', alignItems: 'center' }}>
+          <div
+            style={{
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              backgroundColor: ping ? 'green' : 'red',
+              marginRight: '10px',
+            }}
+          ></div>
+          <span>{ping ? 'Online' : 'Offline'}</span>
+        </div>
+        <div style={{ position: 'absolute', top: '10px', right: '10px' }}>
+          <span>
+            {idToken ? `Logged In ${loginCount > 0 ? loginCount : ""}` : 'Logged Out'}
+          </span>
+        </div>
         <div>
           <h2>Login</h2>
-          <Login onLoginSuccess={handleLoginSuccess}/>
+          <Login onLoginSuccess={setIdToken} />
         </div>
       </header>
     </div>
