@@ -69,7 +69,7 @@ def create_user(user: User):
 @app.post("/login")
 def login(user: User = Depends(verify_firebase_token)):
     create_user(user)
-    return {"message": "login success!"}
+    return user.to_dict()
 
 @app.get("/login-count")
 def login(user: User = Depends(verify_firebase_token)):

@@ -16,3 +16,11 @@ class User:
             user_id=user_dict.get('user_id'),
             email=user_dict.get('email')
         )
+    
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "picture": self.picture,
+            "user_id": self.user_id,
+            "email": self.email
+        }

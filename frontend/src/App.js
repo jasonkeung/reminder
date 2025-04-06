@@ -1,6 +1,6 @@
 import './App.css';
 import { api } from './api';
-import Login from './Login'; 
+import Login from './Login';
 
 import React, { useState, useEffect } from 'react';
 
@@ -10,6 +10,12 @@ function App() {
   const [ping, setPing] = useState(false);
   const [idToken, setIdToken] = useState(null);
   const [loginCount, setLoginCount] = useState(0);
+  const [user, setUser] = useState(null);
+
+  const onLoginSuccess = (idToken, user) => {
+    setIdToken(idToken);
+    setUser(user);
+  }
 
   useEffect(() => {
     api.ping(() => setPing(true));
@@ -33,15 +39,7 @@ function App() {
           ></div>
           <span>{ping ? 'Online' : 'Offline'}</span>
         </div>
-        <div style={{ position: 'absolute', top: '10px', right: '10px' }}>
-          <span>
-            {idToken ? `Logged In ${loginCount > 0 ? loginCount : ""}` : 'Logged Out'}
-          </span>
-        </div>
-        <div>
-          <h2>Login</h2>
-          <Login onLoginSuccess={setIdToken} />
-        </div>
+        <Login user={user} onLoginSuccess={onLoginSuccess} loginCount={loginCount} />
       </header>
     </div>
   );
