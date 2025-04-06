@@ -8,11 +8,16 @@ import React, { useState, useEffect } from 'react';
 function App() {
 
   const [ping, setPing] = useState(false);
-  const [idToken, setIdToken] = useState(null);
   const [loginCount, setLoginCount] = useState(0);
-  const [user, setUser] = useState(null);
+  const [idToken, setIdToken] = useState(() => localStorage.getItem('idToken'))
+  const [user, setUser] = useState(() => {
+    const stored = localStorage.getItem('user')
+    return stored ? JSON.parse(stored) : null
+  })
 
   const onLoginSuccess = (idToken, user) => {
+    localStorage.setItem('idToken', idToken)
+    localStorage.setItem('user', JSON.stringify(user))
     setIdToken(idToken);
     setUser(user);
   }
