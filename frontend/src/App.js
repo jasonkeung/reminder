@@ -24,10 +24,17 @@ function App() {
     setUser(user);
   }
 
+  const onTokenExpired = () => {
+    localStorage.removeItem('idToken')
+    localStorage.removeItem('user')
+    setIdToken(null);
+    setUser(null);
+  }
+
   useEffect(() => {
     api.ping(() => setPing(true));
     if (idToken != null) {
-      api.getLoginCount(idToken, setLoginCount);
+      api.getLoginCount(idToken, setLoginCount, onTokenExpired);
     }
 
     const config = {
@@ -40,7 +47,14 @@ function App() {
         autoCenter: Phaser.Scale.CENTER_BOTH, // Center canvas in both directions
         width: '100%',
         height: '100%',
-      }
+      },
+      physics: {
+        default: 'arcade',
+        arcade: {
+          gravity: { y: 0 }, // No gravity if it's top-down
+          debug: true // Optional, shows collision boxes
+        }
+      },
     };
 
     const game = new Phaser.Game(config)

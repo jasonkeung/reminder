@@ -19,16 +19,39 @@ async function getApiUrl() {
   }
 }
 
+function isTokenExpired(token) {
+  if (!token) return true;
+
+  const [, payload] = token.split('.'); // Get middle part
+  if (!payload) return true;
+
+  try {
+    const decoded = JSON.parse(atob(payload));
+    const exp = decoded.exp;
+    if (!exp) return true;
+
+    const now = Math.floor(Date.now() / 1000); // Current time in seconds
+    return now >= exp;
+  } catch (e) {
+    return true; // Malformed token
+  }
+}
+
 class ApiClient {
   constructor() {
     this.apiUrl = getApiUrl();
   }
 
-  getLoginCount(idToken, callback) {
+  getLoginCount(idToken, onResponse, onTokenExpired) {
+    if (isTokenExpired(idToken)) {
+      console.error('Token is expired');
+      onTokenExpired();
+      return;
+    }
     const callApi = async () => {
       try {
         const response = await api.get('/login-count', idToken);
-        callback(response.count);
+        onResponse(response.count);
       } catch (error) {
         console.error('Error fetching login count:', error);
       }
@@ -36,11 +59,16 @@ class ApiClient {
     callApi();
   }
 
-  postLogin(idToken, callback) {
+  postLogin(idToken, onResponse, onTokenExpired) {
+    if (isTokenExpired(idToken)) {
+      console.error('Token is expired');
+      onTokenExpired();
+      return;
+    }
     const callApi = async () => {
       try {
         const response = await this.post('/login', null, idToken);
-        callback(response);
+        onResponse(response);
       } catch (error) {
         console.error('Error fetching login count:', error);
       }
