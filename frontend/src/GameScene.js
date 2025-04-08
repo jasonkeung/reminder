@@ -58,11 +58,14 @@ export default class GameScene extends Phaser.Scene {
     update() {
         if (this.isPointerDown) {
             if (this.startCircle) {
+                this.startCircle.setVisible(true);
                 this.startCircle.x = this.startX;
                 this.startCircle.y = this.startY;
             } else {
                 this.startCircle = this.add.circle(this.startX, this.startY, 5, 0x00ff00);
             }
+        } else if (this.startCircle) {
+            this.startCircle.setVisible(false);
         }
         const speed = 200;
         const body = this.player.body;
@@ -130,9 +133,6 @@ export default class GameScene extends Phaser.Scene {
             this.ticksTillMove = 30;
             api.sendMessage('player-move', { x: body.x, y: body.y });
 
-        }
-        for (const id in this.otherPlayers) {
-            const player = this.otherPlayers[id];
         }
     }
 
