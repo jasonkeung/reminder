@@ -31,7 +31,7 @@ jobs:
 
       - name: Set production API URL in public/config.json
         run: |
-          echo '{ "API_URL": "https://reminder-backend-349073578254.us-central1.run.app" }' > frontend/public/config.json
+          echo '{ "API_URL": "https://reminder-backend-349073578254.us-central1.run.app", "WS_URL": "ws://localhost:8000/ws" }' > frontend/public/config.json
 
       - name: Build Docker image
         run: |
