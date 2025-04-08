@@ -13,14 +13,10 @@ function App() {
   const [connected, setConnected] = useState(false);
   const [loginCount, setLoginCount] = useState(0);
   const [idToken, setIdToken] = useState(() => localStorage.getItem('idToken'))
-  const [user, setUser] = useState(() => {
-    const stored = localStorage.getItem('user')
-    return stored ? JSON.parse(stored) : null
-  })
+  const [user, setUser] = useState(null);
 
   const onLoginSuccess = (idToken, user) => {
     localStorage.setItem('idToken', idToken)
-    localStorage.setItem('user', JSON.stringify(user))
     setIdToken(idToken);
     setUser(user);
     api.connectWebSocket(idToken, setConnected);
@@ -28,7 +24,6 @@ function App() {
 
   const onTokenExpired = () => {
     localStorage.removeItem('idToken')
-    localStorage.removeItem('user')
     setIdToken(null);
     setUser(null);
   }
