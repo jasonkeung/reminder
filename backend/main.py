@@ -1,4 +1,6 @@
-from fastapi import FastAPI, Depends, HTTPException, Header
+import asyncio
+import json
+from fastapi import FastAPI, Depends, HTTPException, Header, WebSocket, WebSocketDisconnect
 from firebase_admin import credentials, initialize_app, auth, firestore
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -9,8 +11,6 @@ cred = credentials.Certificate("./.secrets/firebasekey.json")
 initialize_app(cred)
 
 app = FastAPI()
-db = firestore.client()
-
 app.add_middleware(
     CORSMiddleware,
      allow_origins=[
@@ -24,6 +24,42 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+db = firestore.client()
+websocket_clients = []
+
+# Firestore listener to sync player data
+async def listen_to_firestore():
+    player_ref = db.collection('players')
+    loop = asyncio.get_running_loop()  # Get the main event loop
+    def on_snapshot(doc_snapshot, changes, read_time):
+        for change in changes:
+            # Extract the player data from the modified or added document
+            player_data = change.document.to_dict()
+            player_data["id"] = change.document.id
+            data = {
+                "event": "player-update",
+                "payload": player_data
+            }
+
+            # Send this update to all connected clients
+            for client in websocket_clients:
+                # Use run_coroutine_threadsafe to schedule the coroutine in the main event loop
+                asyncio.run_coroutine_threadsafe(
+                    client.send_text(json.dumps(data)),
+                    loop
+                )
+    
+    # Listen to changes in the players collection
+    player_ref.on_snapshot(on_snapshot)
+
+    # Keep the function alive
+    while True:
+        await asyncio.sleep(3600)
+
+@app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(listen_to_firestore())
+
 @app.options("/test")
 async def preflight():
     return {"message": "Preflight request accepted"}
@@ -36,7 +72,16 @@ def verify_firebase_token(authorization: str = Header(None)) -> User:
         decoded_token = auth.verify_id_token(token)
         return User.from_dict(decoded_token)
     except Exception as e:
+        print(f"Error verifying token: {e}")
         raise HTTPException(status_code=401, detail=f"Invalid Firebase token, error: {e}")
+    
+def verify_firebase_token_ws(token: str) -> User:
+    try:
+        # Verify the token using Firebase Admin SDK
+        decoded_token = auth.verify_id_token(token)
+        return User.from_dict(decoded_token)
+    except Exception as e:
+        raise HTTPException(status_code=401, detail="Invalid Firebase token")
 
 @app.get("/secure-data")
 def secure_data(user: User = Depends(verify_firebase_token)):
@@ -81,8 +126,45 @@ def login(user: User = Depends(verify_firebase_token)):
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to jason's backend server 1!"}
+    return {"message": "Welcome to jason's backend server!"}
 
 @app.get("/test")
 def read_root():
     return {"message": "Welcome to jason's backend server test!"}
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket, user: User = Depends(verify_firebase_token_ws)):
+    await websocket.accept()
+
+    user_id = user.user_id  # Extract the user ID from the decoded token
+    websocket_clients.append(websocket)
+    
+    try:
+        while True:
+            # Receive data from the client (player movement)
+            data = await websocket.receive_text()
+            message = json.loads(data)
+            event = message.get("event")
+
+            # Handle ping event
+            if event == "ping":
+                print(f"Ping received from {user_id}")
+                await websocket.send_text(json.dumps({"event": "pong"}))
+            elif event == "player-move":
+                # # Optionally, broadcast to other players
+                # for client in websocket_clients:
+                #     if client != websocket and client.application_state == WebSocket.CONNECTED:
+                #         await client.send_text(data)
+
+                # Persist player data in Firestore (if applicable)
+                player_data = json.loads(data)["payload"]  # Assuming the data is in JSON format
+                player_ref = db.collection('players').document(user_id)
+                player_ref.set({
+                    'x': player_data['x'],
+                    'y': player_data['y']
+                })
+
+    except WebSocketDisconnect:
+        # Remove the client from the list of connected clients
+        websocket_clients.remove(websocket)
+        print(f"Player {websocket.client} disconnected")

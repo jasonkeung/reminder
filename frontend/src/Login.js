@@ -26,7 +26,7 @@ export default function Login({ user, onLoginSuccess, loginCount }) {
         justifyContent: 'flex-end',
         gap: '10px',
       }}>
-      {user == null && <button onClick={() => loginWithGoogle(onLoginSuccess)}>Login with Google</button>}
+      <button onClick={() => loginWithGoogle(onLoginSuccess)}>Login with Google</button>
 
       {user && user.picture && (
         <>
