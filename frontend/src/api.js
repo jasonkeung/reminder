@@ -172,7 +172,6 @@ class ApiClient {
       this.pingInterval = setInterval(() => {
         if (this.socket.readyState === WebSocket.OPEN) {
           this.socket.send(JSON.stringify({ event: "ping" }));
-          console.log("Ping sent to server");
         }
       }, 5000); // Send a ping every 5 seconds
     };
