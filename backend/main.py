@@ -1,6 +1,7 @@
 import asyncio
 import json
 from fastapi import FastAPI, Depends, HTTPException, Header, WebSocket, WebSocketDisconnect
+from fastapi.websockets import WebSocketState
 from firebase_admin import credentials, initialize_app, auth, firestore
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -153,7 +154,7 @@ async def websocket_endpoint(websocket: WebSocket, user: User = Depends(verify_f
             elif event == "player-move":
                 # Optionally, broadcast to other players
                 for client in websocket_clients:
-                    if client != websocket and client.application_state == WebSocket.CONNECTED:
+                    if client != websocket and client.application_state == WebSocketState.CONNECTED:
                         await client.send_text(data)
 
                 # Persist player data in Firestore (if applicable)
