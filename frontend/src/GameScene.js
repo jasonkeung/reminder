@@ -39,17 +39,10 @@ export default class GameScene extends Phaser.Scene {
         this.pointer = null;
         this.startCircle = null;
 
-        api.on("player-update", (payload) => {
-            if (!this.otherPlayerLocations[payload.id]) {
-                this.otherPlayerLocations[payload.id] = {
-                    x: payload.x,
-                    y: payload.y
-                }
-            } else {
-                this.otherPlayerLocations[payload.id] = {
-                    x: payload.x,
-                    y: payload.y
-                }
+        api.on("player-move", (payload) => {
+            this.otherPlayerLocations[payload.id] = {
+                x: payload.x,
+                y: payload.y
             }
         });
 
