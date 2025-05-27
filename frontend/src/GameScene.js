@@ -1,28 +1,22 @@
-import Phaser from 'phaser'
-import { api } from './api'
+import Phaser from 'phaser';
+import Player from './Player';
 
 export default class GameScene extends Phaser.Scene {
-    constructor(user) {
-        super('GameScene')
-        this.user = user;
+    constructor() {
+        super('GameScene');
     }
 
     preload() {
-        // Load any assets here
+        this.load.image('terrain', 'assets/terrain.png');
+        this.load.image('terrain2', 'assets/terrain2.png');
+        this.load.tilemapTiledJSON('map', 'assets/map2.tmj');
+        this.load.spritesheet('solider', 'assets/soldier.png', {
+            frameWidth: 64,
+            frameHeight: 64
+        });
     }
 
     create() {
-
-        this.ticksTillMove = 30;
-
-        this.player = this.add.rectangle(400, 300, 40, 40, 0x00ff00); // a green square as player
-        this.physics.add.existing(this.player);
-        this.player.setOrigin(.5, .5);
-        this.player.body.setCollideWorldBounds(true);
-
-        this.otherPlayers = {};
-        this.otherPlayerLocations = {};
-
         this.keys = this.input.keyboard.addKeys({
             up: 'W',
             down: 'S',
@@ -30,130 +24,79 @@ export default class GameScene extends Phaser.Scene {
             right: 'D'
         });
 
-        // Add touch controls
-        this.input.on('pointerdown', this.onPointerDown, this);
-        this.input.on('pointermove', this.onPointerMove, this);
-        this.input.on('pointerup', this.onPointerUp, this);
+        const map = this.make.tilemap({ key: 'map' });
+        const tileset = map.addTilesetImage('terrain', 'terrain');
+        const tileset2 = map.addTilesetImage('terrain2', 'terrain2');
 
-        this.isPointerDown = false;
-        this.pointer = null;
-        this.startCircle = null;
-
-        api.on("player-move", (payload) => {
-            this.otherPlayerLocations[payload.id] = {
-                x: payload.x,
-                y: payload.y
-            }
+        // Loop through all layers in the map and create them
+        map.layers.forEach((layerData, i) => {
+            // You can use either tileset or tileset2 depending on your Tiled setup
+            // If you have multiple tilesets per layer, you may need to check which tileset to use
+            map.createLayer(layerData.name, [tileset, tileset2], 0, 0);
         });
+        this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
 
+        // Draw tile borders and highlight player tile
+        this.tileGraphics = this.add.graphics();
+
+        this.player = new Player(this, 5, 5, 'solider', 1);
+
+        // Example: queue a sequence of moves (right, down, left, up)
+        // this.player.queueInput(1, 0, 'right');
+        // this.player.queueInput(0, 1, 'down');
+        // this.player.queueInput(-1, 0, 'left');
+        // this.player.queueInput(0, -1, 'up');
     }
 
     update() {
-        if (this.isPointerDown) {
-            if (this.startCircle) {
-                this.startCircle.setVisible(true);
-                this.startCircle.x = this.startX;
-                this.startCircle.y = this.startY;
-            } else {
-                this.startCircle = this.add.circle(this.startX, this.startY, 5, 0x00ff00);
-            }
-        } else if (this.startCircle) {
-            this.startCircle.setVisible(false);
-        }
-        const speed = 200;
-        const body = this.player.body;
-
-        body.setVelocity(0);
-
-        if (this.keys.left.isDown) {
-            body.setVelocityX(-speed);
-        } else if (this.keys.right.isDown) {
-            body.setVelocityX(speed);
+        // Handle real-time input: queue only on key down events
+        if (Phaser.Input.Keyboard.JustDown(this.keys.up)) {
+            this.player.queueInput(0, -1, 'up');
+        } else if (Phaser.Input.Keyboard.JustDown(this.keys.down)) {
+            this.player.queueInput(0, 1, 'down');
+        } else if (Phaser.Input.Keyboard.JustDown(this.keys.left)) {
+            this.player.queueInput(-1, 0, 'left');
+        } else if (Phaser.Input.Keyboard.JustDown(this.keys.right)) {
+            this.player.queueInput(1, 0, 'right');
         }
 
-        if (this.keys.up.isDown) {
-            body.setVelocityY(-speed);
-        } else if (this.keys.down.isDown) {
-            body.setVelocityY(speed);
-        }
+        this.player.update();
 
-        if (this.isPointerDown && this.pointer) {
-            // Calculate the distance between
-            const dx = this.pointer.x - this.startX;
-            const dy = this.pointer.y - this.startY;
-
-            // Calculate the magnitude (distance)
-            const magnitude = Math.sqrt(dx ** 2 + dy ** 2);
-
-            if (magnitude > 0) {
-                // Normalize the dx and dy
-                const ndx = dx / magnitude;
-                const ndy = dy / magnitude;
-
-                // Move the player based on the touch movement
-                const body = this.player.body;
-                body.setVelocity(ndx * 200, ndy * 200); // Adjust speed multiplier as needed
-            } else {
-                // Stop the player's movement if there's no drag
-                const body = this.player.body;
-                body.setVelocity(0, 0);
-            }
-        }
-
-
-
-        for (const id in this.otherPlayerLocations) {
-            if (id === this.user.user.user_id) {
-                continue;
-            }
-            const playerLocation = this.otherPlayerLocations[id];
-            if (!(id in this.otherPlayers)) {
-                console.log("Adding new player", id);
-                const newPlayer = this.add.rectangle(playerLocation.x, playerLocation.y, 40, 40, 0xff0000);
-                this.physics.add.existing(newPlayer);
-                newPlayer.setOrigin(0, 0);
-                newPlayer.body.setCollideWorldBounds(true);
-                this.otherPlayers[id] = newPlayer;
-            } else {
-                let player = this.otherPlayers[id];
-                player.x = playerLocation.x;
-                player.y = playerLocation.y;
-            }
-        }
-
-        this.ticksTillMove -= 1;
-        if (this.ticksTillMove <= 0) {
-            this.ticksTillMove = 30;
-            api.sendMessage('player-move', { x: body.x, y: body.y });
-
-        }
+        // this.update_debugGraphics();
     }
 
-    destroy() {
-        api.off("player-update"); // Remove the listener
-        super.destroy();
-    }
+    update_debugGraphics() {
+        // --- Highlight the player's current tile ---
+        this.tileGraphics.clear();
 
-    onPointerDown(pointer) {
-        // Store the initial touch position
-        this.startX = pointer.x;
-        this.startY = pointer.y;
-        this.isPointerDown = true;
-    }
+        // Draw all tile borders
+        const map = this.make.tilemap({ key: 'map' });
+        const tileWidth = map.tileWidth;
+        const tileHeight = map.tileHeight;
+        const mapWidth = map.width;
+        const mapHeight = map.height;
 
-    onPointerMove(pointer) {
-        if (this.isPointerDown) {
-            this.pointer = {
-                x: pointer.x,
-                y: pointer.y
+        this.tileGraphics.lineStyle(1, 0xffffff, 0.5);
+        for (let y = 0; y < mapHeight; y++) {
+            for (let x = 0; x < mapWidth; x++) {
+                this.tileGraphics.strokeRect(
+                    x * tileWidth,
+                    y * tileHeight,
+                    tileWidth,
+                    tileHeight
+                );
             }
         }
-    }
 
-    onPointerUp(pointer) {
-        // Stop the player's movement when the touch ends
-        const body = this.player.body;
-        body.setVelocity(0, 0);
-        this.isPointerDown = false;
+        // Highlight the player's tile
+        const playerTileX = Math.floor(this.player.x / tileWidth);
+        const playerTileY = Math.floor(this.player.y / tileHeight);
+        this.tileGraphics.fillStyle(0x44ff44, 0.3); // green highlight, semi-transparent
+        this.tileGraphics.fillRect(
+            playerTileX * tileWidth,
+            playerTileY * tileHeight,
+            tileWidth,
+            tileHeight
+        );
     }
 }

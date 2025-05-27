@@ -4,75 +4,51 @@ import Phaser from 'phaser'
 import GameScene from './GameScene';
 import Login from './Login';
 
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 
 
 function App() {
 
-  const [game, setGame] = useState(null);
-  const [connected, setConnected] = useState(false);
-  const [loginCount, setLoginCount] = useState(0);
+  const gameRef = useRef(null);
   const [idToken, setIdToken] = useState(() => localStorage.getItem('idToken'))
   const [user, setUser] = useState(null);
 
   const onLoginSuccess = (idToken, user) => {
     localStorage.setItem('idToken', idToken)
     setIdToken(idToken);
-    setUser(user);
-    api.connectWebSocket(idToken, setConnected);
   }
-
-  const onTokenExpired = () => {
-    localStorage.removeItem('idToken')
-    setIdToken(null);
-    setUser(null);
-  }
-
-  useEffect(() => {
-    const interval = setInterval(() => api.pingWs(setConnected), 10000);
-    return () => clearInterval(interval);
-  }, []);
 
 
   useEffect(() => {
-    if (connected && user && !game) {
+    if (!gameRef.current) {
       const config = {
         type: Phaser.AUTO,
         backgroundColor: '#202030',
         parent: 'phaser-game',
-        scene: [new GameScene({ user: user })], // Pass your variable here
+        scene: [new GameScene()],
         scale: {
-          mode: Phaser.Scale.RESIZE, // Auto-resizes the game when window size changes
-          autoCenter: Phaser.Scale.CENTER_BOTH, // Center canvas in both directions
+          mode: Phaser.Scale.RESIZE,
+          autoCenter: Phaser.Scale.CENTER_BOTH,
           width: '100%',
           height: '100%',
         },
         physics: {
           default: 'arcade',
           arcade: {
-            gravity: { y: 0 }, // No gravity if it's top-down
-            debug: true // Optional, shows collision boxes
+            gravity: { y: 0 },
+            debug: false
           }
         },
       };
-      setGame(new Phaser.Game(config));
-    } else if (!connected && game) {
-      game.destroy(true);
-      setGame(null);
+      gameRef.current = new Phaser.Game(config);
     }
     return () => {
-      if (game) {
-        game.destroy(true)
+      if (gameRef.current) {
+        gameRef.current.destroy(true);
+        gameRef.current = null;
       }
     }
-  }, [connected, game, user]);
-
-  useEffect(() => {
-    if (idToken != null) {
-      api.getLoginCount(idToken, setLoginCount, onTokenExpired);
-    }
-
-  }, [idToken]);
+  }, []);
 
   return (
     <div className="App">
@@ -86,16 +62,8 @@ function App() {
           justifyContent: 'flex-start',
           gap: '10px',
         }}>
-          <div
-            style={{
-              width: '10px',
-              height: '10px',
-              borderRadius: '50%',
-              backgroundColor: connected ? 'green' : 'red'
-            }} />
-          <span>{connected ? 'Online' : 'Offline'}</span>
         </div>
-        <Login user={user} onLoginSuccess={onLoginSuccess} loginCount={loginCount} />
+        <Login user={user} onLoginSuccess={onLoginSuccess} />
       </header>
 
       <div className="phaser-container" id="phaser-game" />
