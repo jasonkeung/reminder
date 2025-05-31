@@ -146,6 +146,7 @@ def start_move():
             players["p1"].x += 1
         elif ran == 1:
             players["p1"].y += 1
+        time.sleep(3)
 
 @app.get("/world")
 def get_world():

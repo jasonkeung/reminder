@@ -103,6 +103,21 @@ class ApiClient {
     callApi();
   }
 
+  startMove(idToken) {
+    if (isTokenExpired(idToken)) {
+      console.error('Token is expired');
+      return;
+    }
+    const callApi = async () => {
+      try {
+        const response = await this.get('/start-move', idToken);
+      } catch (error) {
+        console.error('Error starting move:', error);
+      }
+    }
+    callApi();
+  }
+
   ping(callback) {
     const fetchTestData = async () => {
       await api.get('/test');
