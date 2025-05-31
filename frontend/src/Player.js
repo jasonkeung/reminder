@@ -10,16 +10,18 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.setOrigin(0.25, 0.625);
 
         this.tileSize = 32;
+        // TODO: add player state vars here 
         this.facing = 'down'; // Current facing direction
+        this.setFrame(this.getFrameForDirection(this.facing, 0));
 
-        // Movement state
+        // Animation state
         this.isMoving = false;
         this.targetPosition = null;
         this.moveDuration = 300; // ms to move one tile (adjust as needed)
         this.moveStartTime = 0;
         this.startPosition = null;
 
-        // Input queue
+        // Input queue for animated movement
         this.inputQueue = [];
     }
 
@@ -28,8 +30,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     moveByTile(dx, dy) {
-        if (this.isMoving) return;
-
         // Snap to grid before moving
         const startX = Math.round(this.x / this.tileSize) * this.tileSize;
         const startY = Math.round(this.y / this.tileSize) * this.tileSize;
@@ -62,8 +62,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     update() {
         const now = this.scene.time.now;
+        console.log("player x:", this.x, "y:", this.y, "facing:", this.facing);
 
-        // Handle smooth movement
+        // Animate
         if (this.isMoving && this.targetPosition && this.startPosition) {
             const elapsed = now - this.moveStartTime;
             const t = Math.min(elapsed / this.moveDuration, 1);

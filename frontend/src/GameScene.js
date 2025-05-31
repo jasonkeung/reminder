@@ -1,15 +1,20 @@
 import Phaser from 'phaser';
 import Player from './Player';
+import { api } from './api';
+
 
 export default class GameScene extends Phaser.Scene {
-    constructor() {
+    constructor(mapName = '', players = {}) {
         super('GameScene');
+        this.mapName = mapName;
+        this.players = players;
+        this.isWorldLoaded = false;
     }
 
     preload() {
+        this.load.tilemapTiledJSON('map', `assets/${this.mapName}.tmj`);
         this.load.image('terrain', 'assets/terrain.png');
         this.load.image('terrain2', 'assets/terrain2.png');
-        this.load.tilemapTiledJSON('map', 'assets/map2.tmj');
         this.load.spritesheet('solider', 'assets/soldier.png', {
             frameWidth: 64,
             frameHeight: 64
@@ -24,28 +29,64 @@ export default class GameScene extends Phaser.Scene {
             right: 'D'
         });
 
+        // Base map
         const map = this.make.tilemap({ key: 'map' });
         const tileset = map.addTilesetImage('terrain', 'terrain');
         const tileset2 = map.addTilesetImage('terrain2', 'terrain2');
-
-        // Loop through all layers in the map and create them
         map.layers.forEach((layerData, i) => {
-            // You can use either tileset or tileset2 depending on your Tiled setup
-            // If you have multiple tilesets per layer, you may need to check which tileset to use
             map.createLayer(layerData.name, [tileset, tileset2], 0, 0);
         });
         this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
 
-        // Draw tile borders and highlight player tile
-        this.tileGraphics = this.add.graphics();
+        api.on("world-update", (payload) => {
+            console.log("World update received:", payload);
+            // keep a world time and only apply updates that are newer than the last update.
+            if (this == null) {
+                // like wtf 
+                console.error("GameScene is null, cannot update world.");
+            }
+            const updatedPlayers = {};
+            payload.players.forEach(p => {
+                updatedPlayers[p.playerId] = p;
+            });
 
-        this.player = new Player(this, 5, 5, 'solider', 1);
+            Object.values(updatedPlayers).forEach(updated => {
+                const existing = this.players[updated.playerId];
+                if (existing) {
+                    console.log("Updating existing player:", updated.playerId);
+                    existing.setPosition(updated.x * 32, updated.y * 32);
+                } else {
+                    console.log("Creating new player:", updated.playerId);
+                    const newPlayer = new Player(this, updated.x, updated.y, 'solider', 1);
+                    this.players[updated.playerId] = newPlayer;
+                }
+            });
+            console.log("Updated players:", this.players);
+        });
+
+        // change to just draw map without the items as one layer.
+
+        // then, create a new object like Player for each object in the state.
+        // if there are actions in the input queue ordered by sent_time (instance var of GameScene), apply them in order if they can be applied (not already moving, etc. maybe just remove the walk time and no need to restrict applying actions)
+
+
+
+        // this.player = new Player(this, 5, 5, 'solider', 1);
 
         // Example: queue a sequence of moves (right, down, left, up)
         // this.player.queueInput(1, 0, 'right');
         // this.player.queueInput(0, 1, 'down');
         // this.player.queueInput(-1, 0, 'left');
         // this.player.queueInput(0, -1, 'up');
+
+    }
+
+    walkPlayer(oldX, oldY, newX, newY) {
+        // something queueing for async movement, but prob dont want this.player.queueInput(0, -1, 'up');
+        // this.player.moveByTile(newX - oldX, newY - oldY);
+
+
+        // task here is just to animate the player moving actually. change player some more and call a method
     }
 
     update() {
@@ -60,7 +101,9 @@ export default class GameScene extends Phaser.Scene {
             this.player.queueInput(1, 0, 'right');
         }
 
-        this.player.update();
+        Object.values(this.players).forEach(player => {
+            player.update();
+        });
 
         // this.update_debugGraphics();
     }

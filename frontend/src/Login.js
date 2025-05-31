@@ -8,13 +8,17 @@ const loginWithGoogle = async (onLoginSuccess) => {
   try {
     const result = await signInWithPopup(auth, provider);
     const idToken = await result.user.getIdToken();
-    api.postLogin(idToken, (response) => onLoginSuccess(idToken, response))
+    api.postLogin(
+      idToken,
+      (response) => onLoginSuccess(idToken, response),
+      () => { throw new Error('Token expired, please login again.'); }
+    );
   } catch (error) {
     console.error("Login failed:", error);
   }
 };
 
-export default function Login({ user, onLoginSuccess, loginCount }) {
+export default function Login({ user, onLoginSuccess }) {
   return (
     <div
       style={{
@@ -30,7 +34,7 @@ export default function Login({ user, onLoginSuccess, loginCount }) {
 
       {user && user.picture && (
         <>
-          <span>{user ? loginCount + " " : ""}{user.email}</span>
+          <span>{user.email}</span>
           <img
             src={user.picture}
             alt="Profile"

@@ -12,20 +12,57 @@ function App() {
   const gameRef = useRef(null);
   const [idToken, setIdToken] = useState(() => localStorage.getItem('idToken'))
   const [user, setUser] = useState(null);
+  const [connected, setConnected] = useState(false);
+  const [world, setWorld] = useState(null);
 
   const onLoginSuccess = (idToken, user) => {
     localStorage.setItem('idToken', idToken)
     setIdToken(idToken);
-  }
+    setUser(user);
+    api.connectWebSocket(idToken, setConnected);
 
+  };
 
   useEffect(() => {
-    if (!gameRef.current) {
+    if (connected) {
+      api.getWorld(
+        idToken,
+        (response) => {
+          setWorld(response);
+          console.log('World data received from get:', response);
+        },
+        () => { throw new Error('Token expired, please login again.'); }
+      );
+    }
+  }, [connected]);
+
+  useEffect(() => {
+    if (idToken && !user) {
+      api.postLogin(
+        idToken,
+        (response) => {
+          if (response) {
+            onLoginSuccess(idToken, response);
+          }
+        },
+        () => {
+          console.error('Token expired, please login again.');
+          setIdToken(null);
+          setUser(null);
+          localStorage.removeItem('idToken');
+        }
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    console.log("gameRef.current:", gameRef.current, "world:", world);
+    if (!gameRef.current && world) {
       const config = {
         type: Phaser.AUTO,
         backgroundColor: '#202030',
         parent: 'phaser-game',
-        scene: [new GameScene()],
+        scene: [new GameScene(world.mapName, world.objects, world.players)],
         scale: {
           mode: Phaser.Scale.RESIZE,
           autoCenter: Phaser.Scale.CENTER_BOTH,
@@ -48,7 +85,7 @@ function App() {
         gameRef.current = null;
       }
     }
-  }, []);
+  }, [world]);
 
   return (
     <div className="App">
@@ -62,6 +99,14 @@ function App() {
           justifyContent: 'flex-start',
           gap: '10px',
         }}>
+          <div
+            style={{
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              backgroundColor: connected ? 'green' : 'red'
+            }} />
+          <span>{connected ? 'Online' : 'Offline'}</span>
         </div>
         <Login user={user} onLoginSuccess={onLoginSuccess} />
       </header>

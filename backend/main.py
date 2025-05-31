@@ -1,10 +1,12 @@
 import asyncio
 import json
+import time
 from fastapi import FastAPI, Depends, HTTPException, Header, WebSocket, WebSocketDisconnect
 from fastapi.websockets import WebSocketState
 from firebase_admin import credentials, initialize_app, auth, firestore
 from fastapi.middleware.cors import CORSMiddleware
 
+from state.world import Player, World
 from user import User
 
 # Initialize Firebase Admin SDK
@@ -27,6 +29,8 @@ app.add_middleware(
 
 db = firestore.client()
 websocket_clients = []
+world = World("default")
+players = {}
 
 # Firestore listener to sync player data
 # async def listen_to_firestore():
@@ -118,7 +122,7 @@ def login(user: User = Depends(verify_firebase_token)):
     return user.to_dict()
 
 @app.get("/login-count")
-def login(user: User = Depends(verify_firebase_token)):
+def login_count(user: User = Depends(verify_firebase_token)):
     doc = db.collection("counts").document(user.user_id).get()
     if doc.exists:
         return {"count": doc.get("count")}
@@ -130,8 +134,20 @@ def read_root():
     return {"message": "Welcome to jason's backend server!"}
 
 @app.get("/test")
-def read_root():
+def read_root_test():
     return {"message": "Welcome to jason's backend server test!"}
+
+@app.get("/world")
+def get_world():
+    if world.map_name == "default": # type: ignore
+        print("Setting up world...")
+        world.set_map_name("map2")
+        world.set_world_width(30)
+        world.set_world_height(20)
+        players["p1"] = Player("p1", 2, 2, Player.FacingDirection.DOWN)
+        world.add_player(players["p1"])
+        print(f"Just set up world, returning {world.to_dict()}")
+    return world.to_dict()
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, user: User = Depends(verify_firebase_token_ws)):
@@ -150,7 +166,11 @@ async def websocket_endpoint(websocket: WebSocket, user: User = Depends(verify_f
             # Handle ping event
             if event == "ping":
                 print(f"Ping received from {user_id}")
-                await websocket.send_text(json.dumps({"event": "pong"}))
+                # await websocket.send_text(json.dumps({"event": "pong"}))
+                await websocket.send_text(json.dumps({
+                    "event": "world-update", 
+                    "payload": world.to_dict()
+                }))
             elif event == "player-move":
                 # Optionally, broadcast to other players
                 for client in websocket_clients:
@@ -168,4 +188,6 @@ async def websocket_endpoint(websocket: WebSocket, user: User = Depends(verify_f
     except WebSocketDisconnect:
         # Remove the client from the list of connected clients
         websocket_clients.remove(websocket)
-        print(f"Player {websocket.client} disconnected")
+        
+
+# setup_world()

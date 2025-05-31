@@ -86,6 +86,23 @@ class ApiClient {
     callApi();
   }
 
+  getWorld(idToken, onResponse, onTokenExpired) {
+    if (isTokenExpired(idToken)) {
+      console.error('Token is expired');
+      onTokenExpired();
+      return;
+    }
+    const callApi = async () => {
+      try {
+        const response = await this.get('/world', idToken);
+        onResponse(response);
+      } catch (error) {
+        console.error('Error fetching world:', error);
+      }
+    }
+    callApi();
+  }
+
   ping(callback) {
     const fetchTestData = async () => {
       await api.get('/test');
@@ -94,12 +111,12 @@ class ApiClient {
     fetchTestData();
   }
 
-  pingWs(callback) {
+  pingWs(setConnectedCallback) {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      callback(true);
+      setConnectedCallback(true);
       this.socket.send(JSON.stringify({ event: "ping" }));
     } else {
-      callback(false);
+      setConnectedCallback(false);
     }
   }
 
@@ -157,10 +174,7 @@ class ApiClient {
       return;
     }
 
-    // WebSocket connection URL
     const wsUrl = `${this.wsUrl}?token=${token}`;
-
-    // Create WebSocket connection
     this.socket = new WebSocket(wsUrl);
 
     // Event listeners
@@ -168,23 +182,21 @@ class ApiClient {
       console.log('WebSocket connected');
       setConnectedCallback(true);
 
-      // Start sending periodic pings
       this.pingInterval = setInterval(() => {
         if (this.socket.readyState === WebSocket.OPEN) {
           this.socket.send(JSON.stringify({ event: "ping" }));
         }
-      }, 5000); // Send a ping every 5 seconds
+      }, 2000);
     };
 
     this.socket.onclose = (event) => {
       console.log('WebSocket disconnected', event);
       setConnectedCallback(false);
-      // Clear the ping interval
       if (this.pingInterval) {
         clearInterval(this.pingInterval);
         this.pingInterval = null;
       }
-      // Try reconnecting automatically after 3 seconds if connection closes unexpectedly
+      // Attempt to reconnect after a delay
       setTimeout(() => this.connectWebSocket(idToken, setConnectedCallback), 3000);
     };
 
