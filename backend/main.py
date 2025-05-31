@@ -1,5 +1,6 @@
 import asyncio
 import json
+import random
 import time
 from fastapi import FastAPI, Depends, HTTPException, Header, WebSocket, WebSocketDisconnect
 from fastapi.websockets import WebSocketState
@@ -136,6 +137,15 @@ def read_root():
 @app.get("/test")
 def read_root_test():
     return {"message": "Welcome to jason's backend server test!"}
+
+@app.get("/start-move")
+def start_move():
+    for i in range(20):
+        ran = random.randint(0, 3)
+        if ran == 0:
+            players["p1"].x += 1
+        elif ran == 1:
+            players["p1"].y += 1
 
 @app.get("/world")
 def get_world():
