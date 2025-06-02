@@ -118,8 +118,6 @@ jobs:
         echo "GCE_VM_IP is ${GITHUB_ENV.GCE_VM_IP}"
         echo "GCE_VM_IP is ${GCE_VM_IP}"
         echo "GCE_VM_IP is ${{ env.GCE_VM_IP }}"
-        echo "GCE_VM_IP is ${{ GCE_VM_IP }}"
-        echo "GCE_VM_IP is $GCE_VM_IP"
 
     - name: Deploy to Compute Engine
       uses: appleboy/ssh-action@v0.1.10
