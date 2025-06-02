@@ -110,8 +110,6 @@ jobs:
       run: |
         echo "GCE_VM_IP=$(gcloud compute instances describe reminder-backend-server --zone=us-east4-b --format='get(networkInterfaces[0].accessConfigs[0].natIP)')" >> $GITHUB_ENV
 
-        echo "First 7 chars of SSH key: $(echo "${{ secrets.GCE_SSH_PRIVATE_KEY }}" | cut -c1-7)"
-
     - name: Deploy to Compute Engine
       uses: appleboy/ssh-action@v0.1.10
       with:
@@ -119,10 +117,9 @@ jobs:
         username: ${{ secrets.GCE_VM_USER }}
         key: ${{ secrets.GCE_SSH_PRIVATE_KEY }}
         script: |
-          docker pull jasonkeung/reminder-backend:${GITHUB_SHA:0:7}
+          docker pull $COMMIT_IMAGE_TAG
           docker stop reminder-backend || true
           docker rm reminder-backend || true
           docker run -d -p 8000:8000 --name reminder-backend \
             -v /home/jkeung/secrets/firebasekey.json:/.secrets/firebasekey.json \
-            jasonkeung/reminder-backend:${GITHUB_SHA:0:7}
-            
+            $COMMIT_IMAGE_TAG
