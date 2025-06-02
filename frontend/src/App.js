@@ -115,20 +115,6 @@ function App() {
         </div>
         <Login user={user} onLoginSuccess={onLoginSuccess} />
       </header>
-      <button
-        onClick={() => api.sendMessage("move-random", {
-          "playerId": "p1"
-        })}
-        disabled={!connected}
-        style={{
-          padding: '8px 16px',
-          fontSize: '16px',
-          marginRight: '10px',
-          cursor: connected ? 'pointer' : 'not-allowed'
-        }}
-      >
-        Start
-      </button>
       <div className="phaser-container" id="phaser-game" />
     </div>
   );
