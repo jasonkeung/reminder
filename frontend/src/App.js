@@ -13,7 +13,7 @@ function App() {
   const [idToken, setIdToken] = useState(() => localStorage.getItem('idToken'))
   const [user, setUser] = useState(null);
   const [connected, setConnected] = useState(false);
-  const [world, setWorld] = useState(null);
+  const [worldData, setWorldData] = useState(null);
 
   const onLoginSuccess = (idToken, user) => {
     localStorage.setItem('idToken', idToken)
@@ -25,10 +25,10 @@ function App() {
 
   useEffect(() => {
     if (connected) {
-      api.getWorld(
+      api.getWorldData(
         idToken,
         (response) => {
-          setWorld(response);
+          setWorldData(response);
           console.log('World data received from get:', response);
         },
         () => { throw new Error('Token expired, please login again.'); }
@@ -56,13 +56,14 @@ function App() {
   }, []);
 
   useEffect(() => {
-    console.log("gameRef.current:", gameRef.current, "world:", world);
-    if (!gameRef.current && world) {
+    console.log("gameRef.current:", gameRef.current, "worldData:", worldData);
+    if (!gameRef.current && worldData) {
+      const gameScene = new GameScene(worldData.mapName, worldData.players);
       const config = {
         type: Phaser.AUTO,
         backgroundColor: '#202030',
         parent: 'phaser-game',
-        scene: [new GameScene(world.mapName, world.objects, world.players)],
+        scene: [gameScene],
         scale: {
           mode: Phaser.Scale.RESIZE,
           autoCenter: Phaser.Scale.CENTER_BOTH,
@@ -76,6 +77,10 @@ function App() {
             debug: false
           }
         },
+        render: {
+          pixelArt: true,
+          antialias: false
+        }
       };
       gameRef.current = new Phaser.Game(config);
     }
@@ -85,7 +90,7 @@ function App() {
         gameRef.current = null;
       }
     }
-  }, [world]);
+  }, [worldData]);
 
   return (
     <div className="App">
@@ -111,7 +116,9 @@ function App() {
         <Login user={user} onLoginSuccess={onLoginSuccess} />
       </header>
       <button
-        onClick={() => api.startMove(idToken)}
+        onClick={() => api.sendMessage("move-random", {
+          "playerId": "p1"
+        })}
         disabled={!connected}
         style={{
           padding: '8px 16px',

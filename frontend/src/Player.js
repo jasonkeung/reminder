@@ -60,6 +60,18 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         return base + Math.min(frameOffset, 8);
     }
 
+    updateFromData(data) {
+        const now = this.scene.time.now;
+        if (data.x !== undefined) this.x = data.x * this.tileSize;
+        if (data.y !== undefined) this.y = data.y * this.tileSize;
+        if (data.facingDirection !== undefined) {
+            this.facing = data.facingDirection?.toLowerCase() || this.facing;
+            const elapsed = now - this.moveStartTime;
+            const t = Math.min(elapsed / this.moveDuration, 1);
+            this.setFrame(this.getFrameForDirection(this.facing, t));
+        }
+    }
+
     update() {
         const now = this.scene.time.now;
         console.log("player x:", this.x, "y:", this.y, "facing:", this.facing);

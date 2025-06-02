@@ -86,7 +86,7 @@ class ApiClient {
     callApi();
   }
 
-  getWorld(idToken, onResponse, onTokenExpired) {
+  getWorldData(idToken, onResponse, onTokenExpired) {
     if (isTokenExpired(idToken)) {
       console.error('Token is expired');
       onTokenExpired();
@@ -221,7 +221,7 @@ class ApiClient {
       // Handle event listeners for specific events if needed
       const eventName = data.event;
       if (this.listeners[eventName]) {
-        this.listeners[eventName].forEach(callback => callback(data.payload));
+        this.listeners[eventName].forEach(callback => callback(data));
       }
     };
 

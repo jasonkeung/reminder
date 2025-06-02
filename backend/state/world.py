@@ -1,5 +1,6 @@
 from typing import List
 from enum import Enum, auto
+import random
 
 class WorldObject:
     def __init__(self, name: str, x: int = 0, y: int = 0):
@@ -49,6 +50,40 @@ class Player:
             "y": self.y,
             "facingDirection": self.facingDirection.name
         }
+
+    def move(self, dx: int, dy: int):
+        self.x += dx
+        self.y += dy
+    
+    def moveOrFaceRandom(self):
+        dir = random.choice(list(Player.FacingDirection))
+        if dir == Player.FacingDirection.UP and self.y > 1:
+            if self.facingDirection != Player.FacingDirection.UP:
+                self.face(Player.FacingDirection.UP)
+            else:
+                self.move(0, -1)
+        elif dir == Player.FacingDirection.DOWN:
+            if self.facingDirection != Player.FacingDirection.DOWN:
+                self.face(Player.FacingDirection.DOWN)  
+            else:
+                self.move(0, 1)
+        elif dir == Player.FacingDirection.LEFT and self.x > 1:
+            if self.facingDirection != Player.FacingDirection.LEFT:
+                self.face(Player.FacingDirection.LEFT)
+            else:
+                self.move(-1, 0)
+        elif dir == Player.FacingDirection.RIGHT:
+            if self.facingDirection != Player.FacingDirection.RIGHT:
+                self.face(Player.FacingDirection.RIGHT)
+            else:
+                self.move(1, 0)
+
+    def face(self, direction: FacingDirection):
+        self.facingDirection = direction
+
+    def update(self, world):
+        print(f"Updating player {self.playerId} at position ({self.x}, {self.y}) facing {self.facingDirection.name}")
+        self.moveOrFaceRandom()
 
 class Action:
     pass
