@@ -110,8 +110,7 @@ jobs:
       run: |
         echo "GCE_VM_IP=$(gcloud compute instances describe reminder-backend-server --zone=us-east4-b --format='get(networkInterfaces[0].accessConfigs[0].natIP)')" >> $GITHUB_ENV
 
-        echo "GCE_SSH_KEY_START=${{ secrets.GCE_SSH_PRIVATE_KEY }}" | cut -c1-7 >> $GITHUB_ENV
-        echo "First 7 chars of SSH key: $GCE_SSH_KEY_START"
+        echo "First 7 chars of SSH key: $(echo "${{ secrets.GCE_SSH_PRIVATE_KEY }}" | cut -c1-7)"
 
     - name: Deploy to Compute Engine
       uses: appleboy/ssh-action@v0.1.10
