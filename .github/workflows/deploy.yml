@@ -116,6 +116,7 @@ jobs:
         host: ${{ env.GCE_VM_IP }}
         username: ${{ secrets.GCE_VM_USER }}
         key: ${{ secrets.GCE_SSH_PRIVATE_KEY }}
+        envs: COMMIT_IMAGE_TAG
         script: |
           docker pull $COMMIT_IMAGE_TAG
           docker stop reminder-backend || true
