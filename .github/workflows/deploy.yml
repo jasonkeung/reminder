@@ -108,15 +108,16 @@ jobs:
     - name: Get GCE VM external IP
       id: get_vm_ip
       run: |
+        echo "describe call: $(gcloud compute instances describe reminder-backend-server --zone=us-east4-b)"
         echo "GCE_VM_IP=$(gcloud compute instances describe reminder-backend-server --zone=us-east4-b --format='get(networkInterfaces[0].accessConfigs[0].natIP)')" >> $GITHUB_ENV
 
     - name: Debug print GCE_VM_IP
-      run: echo "GCE_VM_IP is $GCE_VM_IP"
+      run: echo "GCE_VM_IP is $GCE_SSH_PRIVATE_KEY:0:7"
 
     - name: Deploy to Compute Engine
       uses: appleboy/ssh-action@v0.1.10
       with:
-        host: 34.145.193.115
+        host: ${{ env.GCE_VM_IP }}
         username: ${{ secrets.GCE_VM_USER }}
         key: ${{ secrets.GCE_SSH_PRIVATE_KEY }}
         script: |
