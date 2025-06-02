@@ -105,12 +105,23 @@ jobs:
         gcloud auth activate-service-account --key-file /tmp/gcloud-key.json
         gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
 
-    - name: Deploy to Cloud Run
+    - name: Get GCE VM external IP
+      id: get_vm_ip
       run: |
-        gcloud run deploy reminder-backend \
-          --image $COMMIT_IMAGE_TAG \
-          --platform managed \
-          --region us-central1 \
-          --project ${{ secrets.GCP_PROJECT_ID }} \
-          --set-secrets="/app/.secrets/firebasekey.json=FIREBASE_KEY:latest" \
-          --allow-unauthenticated
+        export IP=$(gcloud compute instances describe reminder-backend-server --zone=us-east4-b --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
+        echo "GCE_VM_IP=$IP" >> $GITHUB_ENV
+
+    - name: Deploy to Compute Engine
+      uses: appleboy/ssh-action@v0.1.10
+      with:
+        host: ${{ secrets.GCE_VM_IP }}
+        username: ${{ secrets.GCE_VM_USER }}
+        key: ${{ secrets.GCE_SSH_PRIVATE_KEY }}
+        script: |
+          docker pull jasonkeung/reminder-backend:${GITHUB_SHA:0:7}
+          docker stop reminder-backend || true
+          docker rm reminder-backend || true
+          docker run -d -p 8000:8000 --name reminder-backend \
+            -v /home/jkeung/secrets/firebasekey.json:/.secrets/firebasekey.json \
+            jasonkeung/reminder-backend:${GITHUB_SHA:0:7}
+            
