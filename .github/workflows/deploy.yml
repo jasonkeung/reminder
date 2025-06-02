@@ -111,6 +111,9 @@ jobs:
         export IP=$(gcloud compute instances describe reminder-backend-server --zone=us-east4-b --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
         echo "GCE_VM_IP=$IP" >> $GITHUB_ENV
 
+    - name: Debug print GCE_VM_IP
+      run: echo "GCE_VM_IP is $GCE_VM_IP"
+
     - name: Deploy to Compute Engine
       uses: appleboy/ssh-action@v0.1.10
       with:
