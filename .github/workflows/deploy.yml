@@ -116,7 +116,7 @@ jobs:
     - name: Deploy to Compute Engine
       uses: appleboy/ssh-action@v0.1.10
       with:
-        host: ${{ env.GCE_VM_IP }}
+        host: 34.145.193.115
         username: ${{ secrets.GCE_VM_USER }}
         key: ${{ secrets.GCE_SSH_PRIVATE_KEY }}
         script: |
