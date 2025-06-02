@@ -109,10 +109,12 @@ jobs:
       id: get_vm_ip
       run: |
         echo "describe call: $(gcloud compute instances describe reminder-backend-server --zone=us-east4-b)"
+        echo "describe call 2: $(gcloud compute instances describe reminder-backend-server --zone=us-east4-b --format='get(networkInterfaces[0].accessConfigs[0].natIP)')"
         echo "GCE_VM_IP=$(gcloud compute instances describe reminder-backend-server --zone=us-east4-b --format='get(networkInterfaces[0].accessConfigs[0].natIP)')" >> $GITHUB_ENV
+        echo "now, GCE_VM_IP is $GCE_VM_IP"
 
     - name: Debug print GCE_VM_IP
-      run: echo "GCE_SSH_PRIVATE_KEY is ${secrets.GCE_SSH_PRIVATE_KEY:0:7}"
+      run: echo "GCE_VM_IP is ${env.GCE_VM_IP}"
 
     - name: Deploy to Compute Engine
       uses: appleboy/ssh-action@v0.1.10
