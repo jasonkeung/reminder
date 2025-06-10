@@ -118,6 +118,7 @@ jobs:
         key: ${{ secrets.GCE_SSH_PRIVATE_KEY }}
         envs: COMMIT_IMAGE_TAG
         script: |
+          cd /home/jkeung
           docker pull $COMMIT_IMAGE_TAG
           docker stop reminder-backend || true
           docker rm reminder-backend || true
