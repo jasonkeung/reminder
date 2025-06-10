@@ -10,8 +10,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from state.world import Player, World
 from user import User
+import os
 
 # Initialize Firebase Admin SDK
+print("Current directory:", os.getcwd())
+print("Directory contents:", os.listdir(os.getcwd()))
 cred = credentials.Certificate("./.secrets/firebasekey.json")
 initialize_app(cred)
 
