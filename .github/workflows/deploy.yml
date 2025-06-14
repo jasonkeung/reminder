@@ -31,7 +31,7 @@ jobs:
 
       - name: Set production API URL in public/config.json
         run: |
-          echo '{ "API_URL": "http://34.145.193.115:8000", "WS_URL": "ws://34.145.193.115:8000/ws" }' > frontend/public/config.json
+          echo '{ "API_URL": "http://api.jasonkeung.com", "WS_URL": "ws://api.jasonkeung.com/ws" }' > frontend/public/config.json
 
       - name: Build Docker image
         run: |
