@@ -86,15 +86,10 @@ class ApiClient {
     callApi();
   }
 
-  getWorldData(idToken, onResponse, onTokenExpired) {
-    if (isTokenExpired(idToken)) {
-      console.error('Token is expired');
-      onTokenExpired();
-      return;
-    }
+  getWorldData(onResponse, onTokenExpired) {
     const callApi = async () => {
       try {
-        const response = await this.get('/world', idToken);
+        const response = await this.get('/world');
         onResponse(response);
       } catch (error) {
         console.error('Error fetching world:', error);
@@ -175,21 +170,14 @@ class ApiClient {
     return response.json();
   }
 
-  connectWebSocket(idToken, setConnectedCallback) {
+  connectWebSocket(setConnectedCallback) {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       console.log('WebSocket is already connected');
       setConnectedCallback(true);
       return;
     }
 
-    const token = idToken;
-    if (!token) {
-      console.error('Cannot connect without a valid token');
-      setConnectedCallback(false);
-      return;
-    }
-
-    const wsUrl = `${this.wsUrl}?token=${token}`;
+    const wsUrl = `${this.wsUrl}`;
     this.socket = new WebSocket(wsUrl);
 
     // Event listeners
@@ -212,7 +200,7 @@ class ApiClient {
         this.pingInterval = null;
       }
       // Attempt to reconnect after a delay
-      setTimeout(() => this.connectWebSocket(idToken, setConnectedCallback), 3000);
+      setTimeout(() => this.connectWebSocket(setConnectedCallback), 3000);
     };
 
     this.socket.onmessage = (event) => {

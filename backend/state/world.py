@@ -55,35 +55,50 @@ class Player:
         self.x += dx
         self.y += dy
     
-    def moveOrFaceRandom(self):
-        dir = random.choice(list(Player.FacingDirection))
-        if dir == Player.FacingDirection.UP and self.y > 1:
+    def moveOrFaceRandom(self, world):
+        directions = list(Player.FacingDirection)
+        min_x, min_y = 1, 1
+        max_x = world.worldWidth - 1
+        max_y = world.worldHeight - 1
+
+        # 50% chance to move in the current facing direction, 50% to pick another direction
+        if random.random() < 0.75:
+            dir = self.facingDirection
+        else:
+            other_dirs = [d for d in directions if d != self.facingDirection]
+            dir = random.choice(other_dirs)
+
+        if dir == Player.FacingDirection.UP and self.y > min_y:
             if self.facingDirection != Player.FacingDirection.UP:
                 self.face(Player.FacingDirection.UP)
             else:
-                self.move(0, -1)
-        elif dir == Player.FacingDirection.DOWN:
+                if self.y - 1 >= min_y:
+                    self.move(0, -1)
+        elif dir == Player.FacingDirection.DOWN and self.y < max_y:
             if self.facingDirection != Player.FacingDirection.DOWN:
                 self.face(Player.FacingDirection.DOWN)  
             else:
-                self.move(0, 1)
-        elif dir == Player.FacingDirection.LEFT and self.x > 1:
+                if self.y + 1 <= max_y:
+                    self.move(0, 1)
+        elif dir == Player.FacingDirection.LEFT and self.x > min_x:
             if self.facingDirection != Player.FacingDirection.LEFT:
                 self.face(Player.FacingDirection.LEFT)
             else:
-                self.move(-1, 0)
-        elif dir == Player.FacingDirection.RIGHT:
+                if self.x - 1 >= min_x:
+                    self.move(-1, 0)
+        elif dir == Player.FacingDirection.RIGHT and self.x < max_x:
             if self.facingDirection != Player.FacingDirection.RIGHT:
                 self.face(Player.FacingDirection.RIGHT)
             else:
-                self.move(1, 0)
+                if self.x + 1 <= max_x:
+                    self.move(1, 0)
 
     def face(self, direction: FacingDirection):
         self.facingDirection = direction
 
     def update(self, world):
         print(f"Updating player {self.playerId} at position ({self.x}, {self.y}) facing {self.facingDirection.name}")
-        self.moveOrFaceRandom()
+        self.moveOrFaceRandom(world)
 
 class Action:
     pass
@@ -130,22 +145,18 @@ class World:
     def add_player(self, player: Player):
         self.players[player.playerId] = player
 
-    def update(self, action: Action):
-        if isinstance(action, WalkPlayer):
-            player = self.players.get(action.playerId)
-            if player is None:
-                return
-            else:
-                move_dir = Player.FacingDirection.from_move(action.oldX, action.oldY, action.newX, action.newY)
-                if move_dir is None or player.facingDirection != move_dir:
-                    return
+    def setup(self):
+        print("Setting up world...")
+        self.set_map_name("map2")
+        self.set_world_width(30)
+        self.set_world_height(20)
+        self.add_player(Player("p1", 2, 2, Player.FacingDirection.DOWN))
+        print(f"Just set up world, returning {self.to_dict()}")
 
-                player.x = action.newX
-                player.y = action.newY
-            return
-        else:
-            pass
-        
+    def update(self):
+        print("Updating world...")
+        for player in self.players.values():
+            player.update(self)
         return
     
     def to_dict(self):

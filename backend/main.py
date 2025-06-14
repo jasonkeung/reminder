@@ -41,8 +41,7 @@ app.add_middleware(
 db = firestore.client()
 websocket_clients = []
 world = World("default")
-players = {}
-
+world.setup()
 # Firestore listener to sync player data
 # async def listen_to_firestore():
 #     player_ref = db.collection('players')
@@ -132,51 +131,25 @@ def login(user: User = Depends(verify_firebase_token)):
     create_user(user)
     return user.to_dict()
 
-@app.get("/login-count")
-def login_count(user: User = Depends(verify_firebase_token)):
-    doc = db.collection("counts").document(user.user_id).get()
-    if doc.exists:
-        return {"count": doc.get("count")}
-    else:
-        return {"count": 0}
-
 @app.get("/")
 def read_root():
     return {"message": "Welcome to jason's backend server!"}
 
-@app.get("/test")
-def read_root_test():
-    return {"message": "Welcome to jason's backend server test!"}
-
-@app.get("/start-move")
-def start_move():
-    for i in range(20):
-        ran = random.randint(0, 1)
-        if ran == 0:
-            players["p1"].x += 1
-        elif ran == 1:
-            players["p1"].y += 1
-        time.sleep(3)    
-
 @app.get("/world")
 def get_world():
-    if world.map_name == "default": # type: ignore
-        print("Setting up world...")
-        world.set_map_name("map2")
-        world.set_world_width(30)
-        world.set_world_height(20)
-        players["p1"] = Player("p1", 2, 2, Player.FacingDirection.DOWN)
-        world.add_player(players["p1"])
-        print(f"Just set up world, returning {world.to_dict()}")
     return world.to_dict()
 
 @app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket, user: User = Depends(verify_firebase_token_ws)):
+async def websocket_endpoint(websocket: WebSocket):
+    # Reject if already at max clients
+    if len(websocket_clients) >= 10:
+        await websocket.close(code=4000, reason="Server full: max 10 clients")
+        return
+
     await websocket.accept()
 
-    user_id = user.user_id  # Extract the user ID from the decoded token
     websocket_clients.append(websocket)
-    
+
     try:
         while True:
             data = await websocket.receive_text()
@@ -185,29 +158,7 @@ async def websocket_endpoint(websocket: WebSocket, user: User = Depends(verify_f
 
             # Handle ping event
             if event == "ping":
-                print(f"Ping received from {user_id}")
                 await websocket.send_text(json.dumps({"event": "pong", "sentAt": time.time()}))
-            elif event == "player-move":
-                payload = message.get("payload")
-                dx, dy = payload["dx"], payload["dy"]
-                players[payload["playerId"]].move(dx, dy)
-
-                for client in websocket_clients:
-                    if client.application_state == WebSocketState.CONNECTED:
-                        await client.send_text(json.dumps({
-                            "event": "world-update",
-                            "payload": world.to_dict(),
-                            "sentAt": time.time()
-                        }))
-            elif event == "move-random":
-                players["p1"].moveRandom()
-                for client in websocket_clients:
-                    if client.application_state == WebSocketState.CONNECTED:
-                        await client.send_text(json.dumps({
-                            "event": "world-update",
-                            "payload": world.to_dict(),
-                            "sentAt": time.time()
-                        }))
 
     except WebSocketDisconnect:
         websocket_clients.remove(websocket)
@@ -216,11 +167,10 @@ async def websocket_endpoint(websocket: WebSocket, user: User = Depends(verify_f
 
 async def update_world_and_broadcast():
     while True:
-        print("Updating world and broadcasting to clients...")
-        for player in players.values():
-            player.update(world)
+        world.update()
 
         for client in websocket_clients:
+            print(f"Broadcasting world update to {len(websocket_clients)} clients")
             if client.application_state == WebSocketState.CONNECTED:
                 await client.send_text(json.dumps({
                     "event": "world-update",

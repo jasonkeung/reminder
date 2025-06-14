@@ -19,22 +19,20 @@ function App() {
     localStorage.setItem('idToken', idToken)
     setIdToken(idToken);
     setUser(user);
-    api.connectWebSocket(idToken, setConnected);
-
   };
 
   useEffect(() => {
-    if (connected) {
-      api.getWorldData(
-        idToken,
-        (response) => {
-          setWorldData(response);
-          console.log('World data received from get:', response);
-        },
-        () => { throw new Error('Token expired, please login again.'); }
-      );
-    }
-  }, [connected]);
+    api.connectWebSocket(setConnected);
+    api.getWorldData(
+      (data) => {
+        console.log("World data received:", data);
+        setWorldData(data);
+      },
+      (error) => {
+        console.error("Failed to fetch world data:", error);
+      }
+    );
+  }, []);
 
   useEffect(() => {
     if (idToken && !user) {
