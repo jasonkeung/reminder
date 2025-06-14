@@ -123,5 +123,5 @@ jobs:
           docker stop reminder-backend || true
           docker rm reminder-backend || true
           docker run -d -p 8000:8000 --name reminder-backend \
-            -v /home/jkeung/secrets/firebasekey.json:/.secrets/firebasekey.json \
+            -v /home/jkeung/secrets/firebasekey.json:/app/.secrets/firebasekey.json \
             $COMMIT_IMAGE_TAG
