@@ -58,6 +58,14 @@ export default class GameScene extends Phaser.Scene {
             this.players[playerId] = newPlayer;
         });
 
+        this.thoughtText = this.add.text(16, 16, '', {
+            font: '18px Arial',
+            fill: '#ffffff',
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            padding: { x: 8, y: 4 }
+        }).setScrollFactor(0);
+        this.thoughtText.setVisible(true);
+
         api.on("world-update", (data) => {
             console.log("World update received:", data);
             // keep a world time and only apply updates that are newer than the last update.
@@ -81,6 +89,7 @@ export default class GameScene extends Phaser.Scene {
                     this.players[updated.playerId] = newPlayer;
                 }
             });
+            this.thoughtText.setText(this.players["p1"].thought || '');
         });
 
         // change to just draw map without the items as one layer.
@@ -119,6 +128,10 @@ export default class GameScene extends Phaser.Scene {
         // } else if (Phaser.Input.Keyboard.JustDown(this.keys.right)) {
         //     this.players["p1"].queueInput(1, 0, 'right');
         // }
+
+        // Display thought text for this.players[0]
+
+
 
         Object.values(this.players).forEach(player => {
             if (!player) {

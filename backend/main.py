@@ -40,7 +40,7 @@ app.add_middleware(
 
 db = firestore.client()
 websocket_clients = []
-world = World("default")
+world = World("basemap")
 world.setup()
 # Firestore listener to sync player data
 # async def listen_to_firestore():
@@ -170,12 +170,11 @@ async def update_world_and_broadcast():
         world.update()
 
         for client in websocket_clients:
-            print(f"Broadcasting world update to {len(websocket_clients)} clients")
             if client.application_state == WebSocketState.CONNECTED:
                 await client.send_text(json.dumps({
                     "event": "world-update",
                     "payload": world.to_dict(),
                     "sentAt": time.time()
                 }))
-        await asyncio.sleep(1)
+        await asyncio.sleep(.5)
 
