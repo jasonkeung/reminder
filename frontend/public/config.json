@@ -1,4 +1,4 @@
 {
-  "API_URL": "https://35.186.184.143:8000",
-  "WS_URL": "wss://35.186.184.143:8000/ws"
+  "API_URL": "https://api.jasonkeung.com",
+  "WS_URL": "wss://api.jasonkeung.com/ws"
 }
